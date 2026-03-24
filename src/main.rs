@@ -8,8 +8,51 @@ use ratuin::{
     model::HistoryEntry,
 };
 
+fn get_cwd(cwd: Option<String>) -> String {
+    if let Some(cwd) = cwd
+        && !cwd.is_empty()
+    {
+        return cwd;
+    } else {
+        std::env::current_dir()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| "unknown".to_string())
+    }
+}
+
+fn validate_command(command: &Commands) -> Result<()> {
+    match command {
+        Commands::Record {
+            command,
+            exit_code,
+            duration_ms,
+            ..
+        } => {
+            if command.trim().is_empty() {
+                anyhow::bail!("Command cannot be empty");
+            }
+
+            if *exit_code < 0 {
+                anyhow::bail!("Exit code cannot be negative");
+            }
+
+            if *duration_ms < 0 {
+                anyhow::bail!("Duration cannot be negative");
+            }
+        }
+        Commands::Search { keyword, .. } => {
+            if keyword.trim().is_empty() {
+                anyhow::bail!("Search keyword cannot be empty");
+            }
+        }
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    validate_command(&cli.command)?;
 
     let conn = db::open_db()?;
 
@@ -23,7 +66,7 @@ fn main() -> Result<()> {
             let history_entry = HistoryEntry {
                 id: None,
                 command,
-                cwd,
+                cwd: get_cwd(cwd),
                 exit_code,
                 duration_ms,
                 timestamp: Utc::now(),

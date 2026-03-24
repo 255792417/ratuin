@@ -16,7 +16,7 @@ pub enum Commands {
         command: String,
 
         #[arg(long)]
-        cwd: String,
+        cwd: Option<String>,
 
         #[arg(long, default_value_t = 0)]
         exit_code: i32,
