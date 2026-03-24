@@ -64,16 +64,26 @@ pub fn insert_history_entry(conn: &Connection, entry: &HistoryEntry) -> Result<(
     Ok(())
 }
 
-pub fn search_history(conn: &Connection, keyword: &str) -> Result<Vec<HistoryEntry>> {
+pub fn search_history(
+    conn: &Connection,
+    keyword: &str,
+    limit: Option<usize>,
+) -> Result<Vec<HistoryEntry>> {
     let pattern = format!("%{}%", keyword);
 
-    let mut stmt = conn.prepare(
-        r#"SELECT id, command, cwd, exit_code, duration_ms, timestamp 
+    let mut query = r#"
+        SELECT id, command, cwd, exit_code, duration_ms, timestamp 
         FROM history 
         WHERE command LIKE ?1 
         ORDER BY id DESC
-        "#,
-    )?;
+        "#
+    .to_string();
+
+    if let Some(limit) = limit {
+        query.push_str(&format!("LIMIT {}", limit));
+    }
+
+    let mut stmt = conn.prepare(&query)?;
 
     let history_iter = stmt.query_map(params![pattern], |row| {
         Ok(HistoryEntry {

@@ -32,8 +32,8 @@ fn main() -> Result<()> {
             db::insert_history_entry(&conn, &history_entry)?;
             println!("Recorded command: {}", history_entry);
         }
-        Commands::Search { keyword } => {
-            let results = db::search_history(&conn, &keyword)?;
+        Commands::Search { keyword, limit } => {
+            let results = db::search_history(&conn, &keyword, limit)?;
 
             if results.is_empty() {
                 println!("No results found for keyword: {}", keyword);

@@ -26,5 +26,8 @@ pub enum Commands {
     },
     Search {
         keyword: String,
+
+        #[arg(long)]
+        limit: Option<usize>,
     },
 }
