@@ -19,10 +19,10 @@ pub enum Commands {
         cwd: Option<String>,
 
         #[arg(long, default_value_t = 0)]
-        exit_code: i32,
+        exit_code: u32,
 
         #[arg(long, default_value_t = 0)]
-        duration_ms: i64,
+        duration_ms: u64,
     },
     Search {
         keyword: String,

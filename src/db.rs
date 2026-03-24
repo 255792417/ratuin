@@ -57,7 +57,8 @@ pub fn insert_history_entry(conn: &Connection, entry: &HistoryEntry) -> Result<(
             &entry.command,
             &entry.cwd,
             entry.exit_code,
-            entry.duration_ms,
+            i64::try_from(entry.duration_ms)
+                .map_err(|e| anyhow::anyhow!("Failed to convert duration_ms: {}", e))?,
             entry.timestamp.to_rfc3339(),
         ],
     )?;
@@ -91,7 +92,13 @@ pub fn search_history(
             command: row.get(1)?,
             cwd: row.get(2)?,
             exit_code: row.get(3)?,
-            duration_ms: row.get(4)?,
+            duration_ms: u64::try_from(row.get::<_, i64>(4)?).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    4,
+                    rusqlite::types::Type::Integer,
+                    Box::new(e),
+                )
+            })?,
             timestamp: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                 .map_err(|e| {
                     rusqlite::Error::FromSqlConversionFailure(

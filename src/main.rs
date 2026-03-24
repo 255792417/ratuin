@@ -22,22 +22,9 @@ fn get_cwd(cwd: Option<String>) -> String {
 
 fn validate_command(command: &Commands) -> Result<()> {
     match command {
-        Commands::Record {
-            command,
-            exit_code,
-            duration_ms,
-            ..
-        } => {
+        Commands::Record { command, .. } => {
             if command.trim().is_empty() {
                 anyhow::bail!("Command cannot be empty");
-            }
-
-            if *exit_code < 0 {
-                anyhow::bail!("Exit code cannot be negative");
-            }
-
-            if *duration_ms < 0 {
-                anyhow::bail!("Duration cannot be negative");
             }
         }
         Commands::Search { keyword, .. } => {
