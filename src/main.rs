@@ -30,11 +30,17 @@ fn validate_command(command: &Commands) -> Result<()> {
                 anyhow::bail!("Command cannot be empty");
             }
         }
-        Commands::Search { limit, .. } => {
+        Commands::Search { limit, cwd, .. } => {
             if let Some(limit) = limit
                 && *limit == 0
             {
                 anyhow::bail!("Search limit must be greater than 0");
+            }
+
+            if let Some(cwd) = cwd
+                && cwd.trim().is_empty()
+            {
+                anyhow::bail!("Search cwd cannot be empty");
             }
         }
         Commands::Import { shell, file, .. } => {
@@ -126,10 +132,21 @@ fn main() -> Result<()> {
         Commands::Search {
             keyword,
             limit,
+            cwd,
             failed_only,
         } => {
             let limit = limit.or(Some(50));
-            let results = db::search_history(&conn, &keyword, limit, failed_only)?;
+            let cwd_filter = cwd.and_then(|value| {
+                let trimmed = value.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    Some(trimmed.to_string())
+                }
+            });
+
+            let results =
+                db::search_history(&conn, &keyword, limit, failed_only, cwd_filter.as_deref())?;
 
             if results.is_empty() {
                 println!("No results found for keyword: {}", keyword);

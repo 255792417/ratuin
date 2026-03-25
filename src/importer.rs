@@ -179,43 +179,58 @@ pub fn import_history_file(
         ShellKind::Fish => parse_fish_history(&content),
     };
 
-    let mut stats = ImportStats {
-        source,
-        imported: 0,
-        skipped_empty: 0,
-        skipped_sensitive: 0,
-        skipped_duplicate: 0,
-    };
+    conn.execute_batch("BEGIN TRANSACTION;")?;
 
-    for record in parsed {
-        let command = record.command.trim().to_string();
-        if command.is_empty() {
-            stats.skipped_empty += 1;
-            continue;
-        }
-
-        if !allow_sensitive && privacy::is_sensitive_command(&command) {
-            stats.skipped_sensitive += 1;
-            continue;
-        }
-
-        let entry = HistoryEntry {
-            id: None,
-            command,
-            cwd: "imported".to_string(),
-            exit_code: 0,
-            duration_ms: record.duration_ms,
-            timestamp: record.timestamp.unwrap_or_else(Utc::now),
+    let import_result: Result<ImportStats> = (|| {
+        let mut stats = ImportStats {
+            source,
+            imported: 0,
+            skipped_empty: 0,
+            skipped_sensitive: 0,
+            skipped_duplicate: 0,
         };
 
-        if db::history_entry_exists(conn, &entry)? {
-            stats.skipped_duplicate += 1;
-            continue;
+        for record in parsed {
+            let command = record.command.trim().to_string();
+            if command.is_empty() {
+                stats.skipped_empty += 1;
+                continue;
+            }
+
+            if !allow_sensitive && privacy::is_sensitive_command(&command) {
+                stats.skipped_sensitive += 1;
+                continue;
+            }
+
+            let entry = HistoryEntry {
+                id: None,
+                command,
+                cwd: "imported".to_string(),
+                exit_code: 0,
+                duration_ms: record.duration_ms,
+                timestamp: record.timestamp.unwrap_or_else(Utc::now),
+            };
+
+            if db::history_entry_exists(conn, &entry)? {
+                stats.skipped_duplicate += 1;
+                continue;
+            }
+
+            db::insert_history_entry(conn, &entry)?;
+            stats.imported += 1;
         }
 
-        db::insert_history_entry(conn, &entry)?;
-        stats.imported += 1;
-    }
+        Ok(stats)
+    })();
 
-    Ok(stats)
+    match import_result {
+        Ok(stats) => {
+            conn.execute_batch("COMMIT;")?;
+            Ok(stats)
+        }
+        Err(error) => {
+            let _ = conn.execute_batch("ROLLBACK;");
+            Err(error)
+        }
+    }
 }

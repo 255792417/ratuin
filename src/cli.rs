@@ -47,6 +47,9 @@ pub enum Commands {
         #[arg(long)]
         limit: Option<usize>,
 
+        #[arg(long)]
+        cwd: Option<String>,
+
         #[arg(long, default_value_t = false)]
         failed_only: bool,
     },

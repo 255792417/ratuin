@@ -51,10 +51,19 @@ ratuin record --command "export TOKEN=abc" --allow-sensitive
 ratuin search cargo --limit 20
 ```
 
+Search uses fuzzy subsequence matching by default: characters in query only need to appear in order, not continuously.
+For example, `ratuin search cgo` can match `cargo`.
+
 Show only failed commands:
 
 ```bash
 ratuin search cargo --failed-only
+```
+
+Filter by working directory:
+
+```bash
+ratuin search cargo --cwd /home/user/project
 ```
 
 Notes:
@@ -81,3 +90,4 @@ Sensitive entries are skipped by default during import as well.
 Use `--allow-sensitive` to include them.
 
 Duplicate imported records are also skipped (same `command + cwd + timestamp`).
+Import runs in a single database transaction for better performance and safer rollback on errors.
