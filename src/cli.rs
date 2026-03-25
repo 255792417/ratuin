@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(name = "ratuin")]
@@ -14,6 +15,16 @@ pub enum Commands {
     Init {
         shell: String,
     },
+    Import {
+        #[arg(long)]
+        shell: String,
+
+        #[arg(long)]
+        file: Option<PathBuf>,
+
+        #[arg(long, default_value_t = false)]
+        allow_sensitive: bool,
+    },
     Record {
         #[arg(long)]
         command: String,
@@ -26,6 +37,9 @@ pub enum Commands {
 
         #[arg(long, default_value_t = 0)]
         duration_ms: u64,
+
+        #[arg(long, default_value_t = false)]
+        allow_sensitive: bool,
     },
     Search {
         keyword: String,
