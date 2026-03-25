@@ -87,7 +87,11 @@ Notes:
 ratuin tui --keyword cgo --cwd /home/user/project --limit 50 --failed-only
 ```
 
-Current status: command is wired and validated, interactive TUI rendering is reserved for the next iteration.
+Current status (MVP):
+- interactive list rendering is enabled
+- typing updates fuzzy search results in real time
+- `Up/Down` to navigate, `Enter` to print selected command
+- `Esc` or `Ctrl-C` to quit, `Ctrl-U` to clear query
 
 ### 4) Import existing history
 
