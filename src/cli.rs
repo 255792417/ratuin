@@ -53,4 +53,17 @@ pub enum Commands {
         #[arg(long, default_value_t = false)]
         failed_only: bool,
     },
+    Tui {
+        #[arg(long)]
+        keyword: Option<String>,
+
+        #[arg(long)]
+        cwd: Option<String>,
+
+        #[arg(long)]
+        limit: Option<usize>,
+
+        #[arg(long, default_value_t = false)]
+        failed_only: bool,
+    },
 }

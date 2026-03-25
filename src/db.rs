@@ -5,31 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::model::HistoryEntry;
-
-fn is_fuzzy_subsequence(query: &str, target: &str) -> bool {
-    let query = query.trim();
-    if query.is_empty() {
-        return true;
-    }
-
-    let mut query_chars = query.chars().map(|c| c.to_ascii_lowercase());
-    let mut current = query_chars.next();
-
-    for target_char in target.chars().map(|c| c.to_ascii_lowercase()) {
-        if let Some(expected) = current {
-            if target_char == expected {
-                current = query_chars.next();
-                if current.is_none() {
-                    return true;
-                }
-            }
-        } else {
-            return true;
-        }
-    }
-
-    current.is_none()
-}
+use crate::search::is_fuzzy_subsequence;
 
 fn map_history_entry(row: &rusqlite::Row<'_>) -> rusqlite::Result<HistoryEntry> {
     Ok(HistoryEntry {
@@ -54,6 +30,47 @@ fn map_history_entry(row: &rusqlite::Row<'_>) -> rusqlite::Result<HistoryEntry> 
             })?
             .with_timezone(&Utc),
     })
+}
+
+fn build_search_query(failed_only: bool, has_cwd_filter: bool) -> String {
+    let mut query = if failed_only {
+        r#"
+        SELECT id, command, cwd, exit_code, duration_ms, timestamp
+        FROM history
+        WHERE exit_code != 0
+        "#
+        .to_string()
+    } else {
+        r#"
+        SELECT id, command, cwd, exit_code, duration_ms, timestamp
+        FROM history
+        WHERE 1 = 1
+        "#
+        .to_string()
+    };
+
+    if has_cwd_filter {
+        query.push_str(" AND cwd = ?1");
+    }
+
+    query.push_str(" ORDER BY id DESC");
+    query
+}
+
+fn push_if_fuzzy_match(
+    entries: &mut Vec<HistoryEntry>,
+    keyword: &str,
+    entry: HistoryEntry,
+    limit: Option<usize>,
+) -> bool {
+    if is_fuzzy_subsequence(keyword, &entry.command) {
+        entries.push(entry);
+        if let Some(max) = limit {
+            return entries.len() >= max;
+        }
+    }
+
+    false
 }
 
 pub fn data_dir() -> Result<PathBuf> {
@@ -143,59 +160,19 @@ pub fn search_history(
     failed_only: bool,
     cwd: Option<&str>,
 ) -> Result<Vec<HistoryEntry>> {
-    let mut query = if failed_only {
-        r#"
-        SELECT id, command, cwd, exit_code, duration_ms, timestamp
-        FROM history
-        WHERE exit_code != 0
-        "#
-        .to_string()
+    let query = build_search_query(failed_only, cwd.is_some());
+    let mut stmt = conn.prepare(&query)?;
+    let mut rows = if let Some(cwd_value) = cwd {
+        stmt.query(params![cwd_value])?
     } else {
-        r#"
-        SELECT id, command, cwd, exit_code, duration_ms, timestamp 
-        FROM history 
-        WHERE 1 = 1
-        "#
-        .to_string()
+        stmt.query([])?
     };
 
-    if cwd.is_some() {
-        query.push_str(" AND cwd = ?2");
-    }
-
-    query.push_str(" ORDER BY id DESC");
-
-    let mut stmt = conn.prepare(&query)?;
-
     let mut entries = Vec::new();
-
-    if let Some(cwd_value) = cwd {
-        let history_iter = stmt.query_map(params![cwd_value], map_history_entry)?;
-
-        for entry in history_iter {
-            let entry = entry?;
-            if is_fuzzy_subsequence(keyword, &entry.command) {
-                entries.push(entry);
-                if let Some(max) = limit
-                    && entries.len() >= max
-                {
-                    break;
-                }
-            }
-        }
-    } else {
-        let history_iter = stmt.query_map([], map_history_entry)?;
-
-        for entry in history_iter {
-            let entry = entry?;
-            if is_fuzzy_subsequence(keyword, &entry.command) {
-                entries.push(entry);
-                if let Some(max) = limit
-                    && entries.len() >= max
-                {
-                    break;
-                }
-            }
+    while let Some(row) = rows.next()? {
+        let entry = map_history_entry(row)?;
+        if push_if_fuzzy_match(&mut entries, keyword, entry, limit) {
+            break;
         }
     }
 

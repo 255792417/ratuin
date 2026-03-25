@@ -10,6 +10,15 @@ A tiny implementation inspired by [atuin](https://github.com/atuinsh/atuin), foc
 - Import existing shell history files
 - Sensitive command filtering by default
 
+## Code Organization
+
+- `src/app/`: CLI command validation and dispatch submodules (`mod.rs`, `handlers.rs`, `validators.rs`)
+- `src/db.rs`: database access and history querying
+- `src/search.rs`: fuzzy subsequence matching logic
+- `src/importer.rs`: import workflow and transaction handling
+- `src/importer_parsers.rs`: shell history parsing by format
+- `src/tui/`: TUI-layer reserved module and request model
+
 ## Build
 
 ```bash
@@ -69,6 +78,14 @@ ratuin search cargo --cwd /home/user/project
 Notes:
 - default search limit is `50`
 - `--limit` must be greater than `0`
+
+### 3.5) TUI (placeholder)
+
+```bash
+ratuin tui --keyword cgo --cwd /home/user/project --limit 50 --failed-only
+```
+
+Current status: command is wired and validated, interactive TUI rendering is reserved for the next iteration.
 
 ### 4) Import existing history
 
