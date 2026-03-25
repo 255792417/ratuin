@@ -30,7 +30,13 @@ fn validate_command(command: &Commands) -> Result<()> {
                 anyhow::bail!("Command cannot be empty");
             }
         }
-        Commands::Search { .. } => {}
+        Commands::Search { limit, .. } => {
+            if let Some(limit) = limit
+                && *limit == 0
+            {
+                anyhow::bail!("Search limit must be greater than 0");
+            }
+        }
         Commands::Import { shell, file, .. } => {
             if !SUPPORTED_SHELLS.contains(&shell.as_str()) {
                 anyhow::bail!(
@@ -85,11 +91,12 @@ fn main() -> Result<()> {
             let stats = importer::import_history_file(&conn, &shell, file, allow_sensitive)?;
 
             println!(
-                "Imported {} entries from {} (skipped empty: {}, skipped sensitive: {})",
+                "Imported {} entries from {} (skipped empty: {}, skipped sensitive: {}, skipped duplicate: {})",
                 stats.imported,
                 stats.source.display(),
                 stats.skipped_empty,
-                stats.skipped_sensitive
+                stats.skipped_sensitive,
+                stats.skipped_duplicate,
             );
         }
         Commands::Record {
@@ -116,8 +123,13 @@ fn main() -> Result<()> {
             db::insert_history_entry(&conn, &history_entry)?;
             println!("Recorded command: {}", history_entry);
         }
-        Commands::Search { keyword, limit } => {
-            let results = db::search_history(&conn, &keyword, limit)?;
+        Commands::Search {
+            keyword,
+            limit,
+            failed_only,
+        } => {
+            let limit = limit.or(Some(50));
+            let results = db::search_history(&conn, &keyword, limit, failed_only)?;
 
             if results.is_empty() {
                 println!("No results found for keyword: {}", keyword);

@@ -51,6 +51,16 @@ ratuin record --command "export TOKEN=abc" --allow-sensitive
 ratuin search cargo --limit 20
 ```
 
+Show only failed commands:
+
+```bash
+ratuin search cargo --failed-only
+```
+
+Notes:
+- default search limit is `50`
+- `--limit` must be greater than `0`
+
 ### 4) Import existing history
 
 Import from default history path:
@@ -69,3 +79,5 @@ ratuin import --shell zsh --file ~/.zsh_history.backup
 
 Sensitive entries are skipped by default during import as well.
 Use `--allow-sensitive` to include them.
+
+Duplicate imported records are also skipped (same `command + cwd + timestamp`).

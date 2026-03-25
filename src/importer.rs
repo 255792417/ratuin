@@ -18,6 +18,7 @@ pub struct ImportStats {
     pub imported: usize,
     pub skipped_empty: usize,
     pub skipped_sensitive: usize,
+    pub skipped_duplicate: usize,
 }
 
 enum ShellKind {
@@ -183,6 +184,7 @@ pub fn import_history_file(
         imported: 0,
         skipped_empty: 0,
         skipped_sensitive: 0,
+        skipped_duplicate: 0,
     };
 
     for record in parsed {
@@ -205,6 +207,11 @@ pub fn import_history_file(
             duration_ms: record.duration_ms,
             timestamp: record.timestamp.unwrap_or_else(Utc::now),
         };
+
+        if db::history_entry_exists(conn, &entry)? {
+            stats.skipped_duplicate += 1;
+            continue;
+        }
 
         db::insert_history_entry(conn, &entry)?;
         stats.imported += 1;

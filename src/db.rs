@@ -65,20 +65,52 @@ pub fn insert_history_entry(conn: &Connection, entry: &HistoryEntry) -> Result<(
     Ok(())
 }
 
+pub fn history_entry_exists(conn: &Connection, entry: &HistoryEntry) -> Result<bool> {
+    let mut stmt = conn.prepare(
+        r#"
+        SELECT EXISTS(
+            SELECT 1
+            FROM history
+            WHERE command = ?1
+              AND cwd = ?2
+              AND timestamp = ?3
+        )
+        "#,
+    )?;
+
+    let exists: i64 = stmt.query_row(
+        params![&entry.command, &entry.cwd, entry.timestamp.to_rfc3339()],
+        |row| row.get(0),
+    )?;
+
+    Ok(exists != 0)
+}
+
 pub fn search_history(
     conn: &Connection,
     keyword: &str,
     limit: Option<usize>,
+    failed_only: bool,
 ) -> Result<Vec<HistoryEntry>> {
     let pattern = format!("%{}%", keyword);
 
-    let mut query = r#"
+    let mut query = if failed_only {
+        r#"
+        SELECT id, command, cwd, exit_code, duration_ms, timestamp
+        FROM history
+        WHERE command LIKE ?1 AND exit_code != 0
+        ORDER BY id DESC
+        "#
+        .to_string()
+    } else {
+        r#"
         SELECT id, command, cwd, exit_code, duration_ms, timestamp 
         FROM history 
         WHERE command LIKE ?1 
         ORDER BY id DESC
         "#
-    .to_string();
+        .to_string()
+    };
 
     if let Some(limit) = limit {
         query.push_str(&format!("LIMIT {}", limit));
