@@ -1,7 +1,7 @@
 use anyhow::Result;
 use chrono::Utc;
 
-use crate::{db, importer, model::HistoryEntry, privacy, tui};
+use crate::ratuin::{db, importer, model::HistoryEntry, privacy, tui};
 
 fn get_cwd(cwd: Option<String>) -> String {
     if let Some(cwd) = cwd
@@ -17,9 +17,9 @@ fn get_cwd(cwd: Option<String>) -> String {
 
 pub fn handle_init(shell: String) -> Result<()> {
     let script = match shell.as_str() {
-        "bash" => std::include_str!("../scripts/init.bash"),
-        "zsh" => std::include_str!("../scripts/init.zsh"),
-        "fish" => std::include_str!("../scripts/init.fish"),
+        "bash" => std::include_str!("../../scripts/init.bash"),
+        "zsh" => std::include_str!("../../scripts/init.zsh"),
+        "fish" => std::include_str!("../../scripts/init.fish"),
         _ => anyhow::bail!("Unsupported shell: {}", shell),
     };
 

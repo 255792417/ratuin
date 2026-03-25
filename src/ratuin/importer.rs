@@ -3,7 +3,7 @@ use chrono::Utc;
 use rusqlite::Connection;
 use std::{fs, path::PathBuf};
 
-use crate::{db, importer_parsers, model::HistoryEntry, privacy};
+use crate::ratuin::{db, importer_parsers, model::HistoryEntry, privacy};
 
 #[derive(Debug)]
 pub struct ImportStats {

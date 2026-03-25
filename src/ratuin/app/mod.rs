@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::cli::{Cli, Commands};
+use crate::ratuin::cli::{Cli, Commands};
 
 mod handlers;
 mod validators;
@@ -8,7 +8,7 @@ mod validators;
 pub fn run(cli: Cli) -> Result<()> {
     validators::validate_command(&cli.command)?;
 
-    let conn = crate::db::open_db()?;
+    let conn = crate::ratuin::db::open_db()?;
 
     match cli.command {
         Commands::Init { shell } => handlers::handle_init(shell),

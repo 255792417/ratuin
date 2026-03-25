@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::cli::Commands;
+use crate::ratuin::cli::Commands;
 
 const SUPPORTED_SHELLS: [&str; 3] = ["bash", "zsh", "fish"];
 

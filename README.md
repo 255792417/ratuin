@@ -12,12 +12,14 @@ A tiny implementation inspired by [atuin](https://github.com/atuinsh/atuin), foc
 
 ## Code Organization
 
-- `src/app/`: CLI command validation and dispatch submodules (`mod.rs`, `handlers.rs`, `validators.rs`)
-- `src/db.rs`: database access and history querying
-- `src/search.rs`: fuzzy subsequence matching logic
-- `src/importer.rs`: import workflow and transaction handling
-- `src/importer_parsers.rs`: shell history parsing by format
-- `src/tui/`: TUI-layer reserved module and request model
+- `src/lib.rs` / `src/main.rs`: crate and binary entry
+- `src/ratuin.rs`: feature module aggregator
+- `src/ratuin/app/`: command dispatch and validation (`mod.rs`, `handlers.rs`, `validators.rs`)
+- `src/ratuin/db.rs`: database access and history querying
+- `src/ratuin/search.rs`: fuzzy subsequence matching logic
+- `src/ratuin/importer.rs`: import workflow and transaction handling
+- `src/ratuin/importer_parsers.rs`: shell history parsing by format
+- `src/ratuin/tui/`: TUI-layer reserved module and request model
 
 ## Build
 

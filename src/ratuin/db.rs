@@ -4,8 +4,8 @@ use rusqlite::{Connection, params};
 use std::fs;
 use std::path::PathBuf;
 
-use crate::model::HistoryEntry;
-use crate::search::is_fuzzy_subsequence;
+use crate::ratuin::model::HistoryEntry;
+use crate::ratuin::search::is_fuzzy_subsequence;
 
 fn map_history_entry(row: &rusqlite::Row<'_>) -> rusqlite::Result<HistoryEntry> {
     Ok(HistoryEntry {
@@ -116,8 +116,8 @@ fn init_db(conn: &Connection) -> Result<()> {
 
 pub fn insert_history_entry(conn: &Connection, entry: &HistoryEntry) -> Result<()> {
     conn.execute(
-        r#"INSERT INTO 
-        history (command, cwd, exit_code, duration_ms, timestamp) 
+        r#"INSERT INTO
+        history (command, cwd, exit_code, duration_ms, timestamp)
         VALUES (?1, ?2, ?3, ?4, ?5)
         "#,
         params![
