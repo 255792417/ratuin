@@ -87,11 +87,25 @@ Notes:
 ratuin tui --keyword cgo --cwd /home/user/project --limit 50 --failed-only
 ```
 
+Use forward mode:
+
+```bash
+ratuin tui --forward
+```
+
 Current status (MVP):
 - interactive list rendering is enabled
 - typing updates fuzzy search results in real time
-- `Up/Down` to navigate, `Enter` to print selected command
+- each result shows execution time and relative time
+- reverse mode is default: query and list order are reversed
+- `--forward` switches query and list order back to normal direction
+- fuzzy-matched characters are highlighted in the command line
+- `Up/Down` to navigate, `Enter/Tab` to print selected command
 - `Esc` or `Ctrl-C` to quit, `Ctrl-U` to clear query
+
+Shell integration:
+- `Ctrl-R` opens `ratuin tui`
+- selecting with `Tab` (or `Enter`) returns command to shell buffer for manual editing
 
 ### 4) Import existing history
 

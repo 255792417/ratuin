@@ -6,6 +6,14 @@ function __ratuin_preexec --on-event fish_preexec
 	set -g __ratuin_command_start_ms (date +%s%3N 2>/dev/null)
 end
 
+function __ratuin_ctrl_r
+	set -l selected (ratuin tui 2>/dev/null)
+	if test -n "$selected"
+		commandline --replace -- "$selected"
+		commandline -f repaint
+	end
+end
+
 function __ratuin_postexec --on-event fish_postexec
 	set -l exit_code $status
 	set -l cmd "$__ratuin_last_command"
@@ -37,3 +45,5 @@ function __ratuin_postexec --on-event fish_postexec
 		ratuin record --command "$cmd" --cwd "$PWD" --exit-code "$exit_code" --duration-ms "$duration_ms" >/dev/null 2>&1 &
 	end
 end
+
+bind \cr '__ratuin_ctrl_r'

@@ -7,6 +7,15 @@ __ratuin_preexec() {
 	__ratuin_command_start_ms="$(__ratuin_now_ms)"
 }
 
+__ratuin_ctrl_r() {
+	local selected
+	selected="$(ratuin tui 2>/dev/null)"
+	if [ -n "$selected" ]; then
+		READLINE_LINE="$selected"
+		READLINE_POINT=${#READLINE_LINE}
+	fi
+}
+
 __ratuin_precmd() {
 	local exit_code="$?"
 	local cmd="${__ratuin_last_command:-}"
@@ -43,3 +52,5 @@ if [ -n "${PROMPT_COMMAND:-}" ]; then
 else
 	PROMPT_COMMAND="__ratuin_precmd"
 fi
+
+bind -x '"\C-r":__ratuin_ctrl_r'

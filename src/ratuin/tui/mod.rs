@@ -49,6 +49,7 @@ pub fn run(request: TuiRequest) -> Result<()> {
                         (KeyCode::Esc, _) => app.should_exit = true,
                         (KeyCode::Char('c'), KeyModifiers::CONTROL) => app.should_exit = true,
                         (KeyCode::Enter, _) => app.submit_selected(),
+                        (KeyCode::Tab, _) => app.submit_selected(),
                         (KeyCode::Up, _) => app.select_prev(),
                         (KeyCode::Down, _) => app.select_next(),
                         (KeyCode::Backspace, _) => {

@@ -10,6 +10,15 @@ __ratuin_preexec() {
 	__ratuin_command_start_ms="$(__ratuin_now_ms)"
 }
 
+function __ratuin_ctrl_r_widget() {
+	local selected
+	selected="$(ratuin tui 2>/dev/null)"
+	if [[ -n "$selected" ]]; then
+		LBUFFER="$selected"
+	fi
+	zle redisplay
+}
+
 __ratuin_precmd() {
 	local exit_code="$?"
 	local cmd="$__ratuin_last_command"
@@ -41,3 +50,6 @@ __ratuin_precmd() {
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec __ratuin_preexec
 add-zsh-hook precmd __ratuin_precmd
+
+zle -N __ratuin_ctrl_r_widget
+bindkey '^R' __ratuin_ctrl_r_widget

@@ -9,6 +9,7 @@ pub struct TuiRequest {
     pub cwd: Option<String>,
     pub limit: Option<usize>,
     pub failed_only: bool,
+    pub reverse_mode: bool,
 }
 
 pub struct AppState {
@@ -21,6 +22,7 @@ pub struct AppState {
     pub should_exit: bool,
     pub selected_command: Option<String>,
     pub status: String,
+    pub reverse_mode: bool,
 }
 
 impl AppState {
@@ -42,17 +44,39 @@ impl AppState {
             should_exit: false,
             selected_command: None,
             status: String::new(),
+            reverse_mode: request.reverse_mode,
+        }
+    }
+
+    pub fn effective_query(&self) -> String {
+        if self.reverse_mode {
+            self.query.chars().rev().collect()
+        } else {
+            self.query.clone()
+        }
+    }
+
+    pub fn render_query(&self) -> String {
+        if self.reverse_mode {
+            self.query.chars().rev().collect()
+        } else {
+            self.query.clone()
         }
     }
 
     pub fn refresh(&mut self, conn: &Connection) -> Result<()> {
+        let effective_query = self.effective_query();
         self.entries = db::search_history(
             conn,
-            &self.query,
+            &effective_query,
             self.limit,
             self.failed_only,
             self.cwd.as_deref(),
         )?;
+
+        if self.reverse_mode {
+            self.entries.reverse();
+        }
 
         if self.entries.is_empty() {
             self.selected = 0;

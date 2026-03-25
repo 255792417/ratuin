@@ -65,5 +65,8 @@ pub enum Commands {
 
         #[arg(long, default_value_t = false)]
         failed_only: bool,
+
+        #[arg(long, default_value_t = false)]
+        forward: bool,
     },
 }

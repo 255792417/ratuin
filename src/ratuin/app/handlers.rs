@@ -105,12 +105,14 @@ pub fn handle_tui(
     cwd: Option<String>,
     limit: Option<usize>,
     failed_only: bool,
+    forward: bool,
 ) -> Result<()> {
     let request = tui::TuiRequest {
         keyword,
         cwd,
         limit,
         failed_only,
+        reverse_mode: !forward,
     };
 
     tui::run(request)

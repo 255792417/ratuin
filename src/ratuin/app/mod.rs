@@ -35,6 +35,7 @@ pub fn run(cli: Cli) -> Result<()> {
             cwd,
             limit,
             failed_only,
-        } => handlers::handle_tui(keyword, cwd, limit, failed_only),
+            forward,
+        } => handlers::handle_tui(keyword, cwd, limit, failed_only, forward),
     }
 }
