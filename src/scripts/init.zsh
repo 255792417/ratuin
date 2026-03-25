@@ -11,11 +11,8 @@ __ratuin_preexec() {
 }
 
 function __ratuin_ctrl_r_widget() {
-	local selected
-	selected="$(ratuin tui 2>/dev/null)"
-	if [[ -n "$selected" ]]; then
-		LBUFFER="$selected"
-	fi
+	zle -I
+	ratuin tui
 	zle redisplay
 }
 

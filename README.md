@@ -97,15 +97,17 @@ Current status (MVP):
 - interactive list rendering is enabled
 - typing updates fuzzy search results in real time
 - each result shows execution time and relative time
-- reverse mode is default: query and list order are reversed
+- reverse mode is default: query panel is below results, and result order is reversed
+- typed characters keep normal order (no reverse typing)
 - `--forward` switches query and list order back to normal direction
 - fuzzy-matched characters are highlighted in the command line
-- `Up/Down` to navigate, `Enter/Tab` to print selected command
+- `Up/Down` to navigate, `Enter` to execute selected command, `Tab` to paste selected command
 - `Esc` or `Ctrl-C` to quit, `Ctrl-U` to clear query
 
 Shell integration:
 - `Ctrl-R` opens `ratuin tui`
-- selecting with `Tab` (or `Enter`) returns command to shell buffer for manual editing
+- selecting with `Tab` returns command to shell buffer for manual editing
+- selecting with `Enter` executes command immediately
 
 ### 4) Import existing history
 

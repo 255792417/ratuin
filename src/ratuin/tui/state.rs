@@ -21,11 +21,20 @@ pub struct AppState {
     pub selected: usize,
     pub should_exit: bool,
     pub selected_command: Option<String>,
+    pub execute_selected: bool,
     pub status: String,
     pub reverse_mode: bool,
 }
 
 impl AppState {
+    fn default_selected_index(&self, len: usize) -> usize {
+        if self.reverse_mode {
+            len.saturating_sub(1)
+        } else {
+            0
+        }
+    }
+
     pub fn from_request(request: TuiRequest) -> Self {
         let cwd = request
             .cwd
@@ -40,31 +49,26 @@ impl AppState {
             limit: request.limit.or(Some(50)),
             failed_only: request.failed_only,
             entries: Vec::new(),
-            selected: 0,
+            selected: usize::MAX,
             should_exit: false,
             selected_command: None,
+            execute_selected: false,
             status: String::new(),
             reverse_mode: request.reverse_mode,
         }
     }
 
     pub fn effective_query(&self) -> String {
-        if self.reverse_mode {
-            self.query.chars().rev().collect()
-        } else {
-            self.query.clone()
-        }
+        self.query.clone()
     }
 
     pub fn render_query(&self) -> String {
-        if self.reverse_mode {
-            self.query.chars().rev().collect()
-        } else {
-            self.query.clone()
-        }
+        self.query.clone()
     }
 
     pub fn refresh(&mut self, conn: &Connection) -> Result<()> {
+        let had_entries = !self.entries.is_empty();
+
         let effective_query = self.effective_query();
         self.entries = db::search_history(
             conn,
@@ -82,7 +86,9 @@ impl AppState {
             self.selected = 0;
             self.status = "No results".to_string();
         } else {
-            if self.selected >= self.entries.len() {
+            if !had_entries {
+                self.selected = self.default_selected_index(self.entries.len());
+            } else if self.selected >= self.entries.len() {
                 self.selected = self.entries.len() - 1;
             }
             self.status = format!("{} results", self.entries.len());
@@ -111,9 +117,10 @@ impl AppState {
         self.selected = (self.selected + 1) % self.entries.len();
     }
 
-    pub fn submit_selected(&mut self) {
+    pub fn submit_selected(&mut self, execute: bool) {
         if let Some(entry) = self.entries.get(self.selected) {
             self.selected_command = Some(entry.command.clone());
+            self.execute_selected = execute;
         }
         self.should_exit = true;
     }

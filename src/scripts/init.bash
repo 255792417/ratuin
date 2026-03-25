@@ -8,12 +8,7 @@ __ratuin_preexec() {
 }
 
 __ratuin_ctrl_r() {
-	local selected
-	selected="$(ratuin tui 2>/dev/null)"
-	if [ -n "$selected" ]; then
-		READLINE_LINE="$selected"
-		READLINE_POINT=${#READLINE_LINE}
-	fi
+	ratuin tui
 }
 
 __ratuin_precmd() {

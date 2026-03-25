@@ -7,11 +7,7 @@ function __ratuin_preexec --on-event fish_preexec
 end
 
 function __ratuin_ctrl_r
-	set -l selected (ratuin tui 2>/dev/null)
-	if test -n "$selected"
-		commandline --replace -- "$selected"
-		commandline -f repaint
-	end
+	ratuin tui
 end
 
 function __ratuin_postexec --on-event fish_postexec

@@ -5,7 +5,11 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, prelude::CrosstermBackend};
-use std::{io, time::Duration};
+use std::process::Command;
+use std::{
+    io::{self, IsTerminal, Write},
+    time::Duration,
+};
 
 use crate::ratuin::db;
 
@@ -18,6 +22,40 @@ fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Re
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
+    Ok(())
+}
+
+fn shell_path() -> String {
+    std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string())
+}
+
+fn execute_selected_command(command: &str) -> Result<()> {
+    let status = Command::new(shell_path())
+        .arg("-ic")
+        .arg(command)
+        .status()?;
+
+    if !status.success() {
+        anyhow::bail!("Command exited with status: {}", status);
+    }
+
+    Ok(())
+}
+
+fn print_selected_command(command: &str, execute: bool) -> Result<()> {
+    let mut stdout = io::stdout();
+
+    if stdout.is_terminal() {
+        if execute {
+            writeln!(stdout, "{}", command)?;
+        } else {
+            write!(stdout, "{}", command)?;
+        }
+        stdout.flush()?;
+    } else {
+        println!("{}", command);
+    }
+
     Ok(())
 }
 
@@ -48,8 +86,8 @@ pub fn run(request: TuiRequest) -> Result<()> {
                     match (key.code, key.modifiers) {
                         (KeyCode::Esc, _) => app.should_exit = true,
                         (KeyCode::Char('c'), KeyModifiers::CONTROL) => app.should_exit = true,
-                        (KeyCode::Enter, _) => app.submit_selected(),
-                        (KeyCode::Tab, _) => app.submit_selected(),
+                        (KeyCode::Enter, _) => app.submit_selected(true),
+                        (KeyCode::Tab, _) => app.submit_selected(false),
                         (KeyCode::Up, _) => app.select_prev(),
                         (KeyCode::Down, _) => app.select_next(),
                         (KeyCode::Backspace, _) => {
@@ -98,7 +136,11 @@ pub fn run(request: TuiRequest) -> Result<()> {
     run_result?;
 
     if let Some(command) = app.selected_command {
-        println!("{}", command);
+        if app.execute_selected {
+            execute_selected_command(&command)?;
+        } else {
+            print_selected_command(&command, false)?;
+        }
     }
 
     Ok(())
