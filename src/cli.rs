@@ -11,6 +11,9 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
+    Init {
+        shell: String,
+    },
     Record {
         #[arg(long)]
         command: String,

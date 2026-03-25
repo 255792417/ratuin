@@ -27,9 +27,15 @@ fn validate_command(command: &Commands) -> Result<()> {
                 anyhow::bail!("Command cannot be empty");
             }
         }
-        Commands::Search { keyword, .. } => {
-            if keyword.trim().is_empty() {
-                anyhow::bail!("Search keyword cannot be empty");
+        Commands::Search { .. } => {}
+        Commands::Init { shell } => {
+            let supported_shells = ["bash", "zsh", "fish"];
+            if !supported_shells.contains(&shell.as_str()) {
+                anyhow::bail!(
+                    "Unsupported shell: {}. Supported shells are: {}",
+                    shell,
+                    supported_shells.join(", ")
+                );
             }
         }
     }
@@ -44,6 +50,24 @@ fn main() -> Result<()> {
     let conn = db::open_db()?;
 
     match cli.command {
+        Commands::Init { shell } => {
+            let script = match shell.as_str() {
+                "bash" => {
+                    std::include_str!("scripts/init.bash")
+                }
+                "zsh" => {
+                    std::include_str!("scripts/init.zsh")
+                }
+                "fish" => {
+                    std::include_str!("scripts/init.fish")
+                }
+                _ => {
+                    anyhow::bail!("Unsupported shell: {}", shell);
+                }
+            };
+
+            println!("{}", script);
+        }
         Commands::Record {
             command,
             cwd,
